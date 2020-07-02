@@ -25,7 +25,18 @@ class PermissionBooleanGroup extends BooleanGroup
 
         $permissionClass = app(PermissionRegistrar::class)->getPermissionClass();
 
-        $options = $permissionClass::get()->pluck($labelAttribute ?? 'name', 'name')->toArray();
+        $options = $permissionClass::get()
+            ->map(function($permission) use ($labelAttribute) {
+                if ($labelAttribute) {
+                    return [$permission->name => $permission->$labelAttribute];
+                } else {
+                    $key = "auth.permission.{$permission->name}";
+                    $label = __($key);
+                    return [$permission->name => $label === $key ? $permission->name :  $label];
+                }
+            })
+            ->collapse()
+            ->toArray();
 
         $this->options($options);
     }
